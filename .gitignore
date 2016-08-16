@@ -14,6 +14,9 @@ lib-cov
 # Coverage directory used by tools like istanbul
 coverage
 
+# distribution directory used by javascript es5
+distribution
+
 # nyc test coverage
 .nyc_output
 
