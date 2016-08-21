@@ -1,10 +1,10 @@
 {
-  "name": "graphql-blog-lib",
+  "name": "graphql-web-lib",
   "version": "0.0.1",
   "description": "A library for blog projects",
   "main": "distribution/index.js",
   "scripts": {
-    "start": "nodemon source/index.jsx --debug --exec babel-node",
+    "start": "nodemon example/index.jsx --debug --exec babel-node --ignore source/graph/public/",
     "build": "babel source --out-dir distribution",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prepublish": "npm run build"
@@ -27,14 +27,20 @@
     "jest": "^14.1.0"
   },
   "dependencies": {
+    "babel-plugin-transform-async-to-generator": "^6.8.0",
+    "cookie-parser": "^1.4.3",
     "express": "^4.14.0",
     "express-graphiql": "^1.0.0",
     "express-graphql": "^0.5.3",
     "graphql": "^0.6.2",
+    "graphql-date": "^1.0.2",
     "graphql-relay": "^0.4.2",
     "graphql-sequelize": "^2.4.0",
     "hstore": "0.0.1",
     "lodash": "^4.15.0",
+    "moment": "^2.14.1",
+    "passport": "^0.3.2",
+    "passport-local": "^1.0.0",
     "pg": "^6.1.0",
     "promise": "^7.1.1",
     "sequelize": "^3.24.0",

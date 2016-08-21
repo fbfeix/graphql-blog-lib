@@ -2,18 +2,23 @@
 import GraphQL, {
     GraphQLSchema, 
     GraphQLQuery, 
-    GraphQLObjectType,
-    GraphQLString,
+    GraphQLObjectType,    
     GraphQLNonNull,
     GraphQLInt,
+    GraphQLBoolean,
+    GraphQLString,
     GraphQLList
 } from 'graphql';
+import GraphQLMomentDate from'./GraphQLMomentDate';
 
 import {resolver} from 'graphql-sequelize';
+import {AuthenticationException} from '../auth/Error';
 
-export default function InitGraphQL(dbMap) {
+export default function InitGraphQL(factory) {
 
-    console.log(dbMap.User);
+    let dbMap = factory.blog.dbMap;
+    let tokenStorage = factory.blog.tokenStorage;
+
 
     return new Promise((resolve, reject) => {    
         
@@ -56,7 +61,17 @@ export default function InitGraphQL(dbMap) {
             fields: {
                 id:     {type: GraphQLString},
                 name:   {type: GraphQLString},
-                email:  {type: GraphQLString},
+                password: {type: GraphQLString},
+                authToken: {type: GraphQLString},
+                email:  {
+                    type: GraphQLString,
+                    resolve(user, context) {
+                        console.debug(context);
+                        
+                        return null;
+                        return "securizable:" + user.email;
+                    }
+                },
                 posts:  {
                     type: new GraphQLList(PostType),
                     resolve(user) {
@@ -65,6 +80,15 @@ export default function InitGraphQL(dbMap) {
                 }
             }
         });
+
+        let TokenType = new GraphQLObjectType({
+            name: 'Token',
+            fields: {
+                value: {type: GraphQLString},
+                expirationDate: {type: GraphQLMomentDate}
+            }
+        })
+
 
         let query = new GraphQLObjectType({
             name: 'Query',
@@ -137,9 +161,50 @@ export default function InitGraphQL(dbMap) {
             }
         }
 
+        let LoginMutation = {
+            type: TokenType,
+            description: 'Tries to login a user',
+            args: {
+                email : {type: new GraphQLNonNull(GraphQLString)},
+                password : {type: new GraphQLNonNull(GraphQLString)},
+                permanent: {type: GraphQLBoolean}
+            },
+            resolve: (root, {email, password, permanent}, {request, response}) => {                              
+                return new Promise((resolve, reject) => {
+                    dbMap.User.findOne({where: {email, password}}).then((user) => {
+                        if(user != null) {
+                            let token = tokenStorage.createOrUpdateToken(null, user)
+                            resolve(token);
+                        }
+                        else {
+                            reject(new AuthenticationException("No User found. Is Email or Password wrong?"));
+                        }
+                    }).catch(err => {
+                        reject(new AuthenticationException(err));
+                    })
+                    
+                }) 
+            }
+        }
+
+        let LogoutMutation = {
+            type: GraphQLBoolean,
+            description: 'Logout a user',
+            args: {
+                tokenValue: {type: new GraphQLNonNull(GraphQLString)}
+            },
+            resolve: (root, {tokenValue}) => {
+                return tokenStorage.removeToken(tokenValue);
+            }
+        }
+
         let mutation = new GraphQLObjectType({
             name: 'mutation',
             fields: {
+                // authorization
+                login: LoginMutation,
+                logout: LogoutMutation,
+
                 addUser: UserAddMutation,
                 changeUser: UserChangeMutation
             }

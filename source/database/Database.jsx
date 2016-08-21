@@ -24,7 +24,8 @@ export function InitDatabase(dbConfig) {
                     max: dbConfig.pool.max,
                     min: dbConfig.pool.min || 1,
                     idle: dbConfig.pool.idle,
-                }
+                },
+                logging: false,
             }
         );
 
@@ -105,16 +106,21 @@ export function InitDatabase(dbConfig) {
             User.hasMany(Post, {as: 'posts'});
             Post.belongsTo(User);      
                   
+            // through param is required!!!
             Tag.belongsToMany(Post, {through: 'PostTags'});
-            Post.hasMany(Tag);
+            Post.belongsToMany(Tag, {through: 'PostTags'});
+            //Post.hasMany(Tag, {through: 'PostTags'});
 
             Database.sync({force: true}).then(()=>{
 
-                console.log(Faker.name.firstName());
-                console.log(Faker.internet.email());
-                console.log(Faker.helpers.randomize());
-
                 let runningNr =0;
+
+                User.create({
+                    id: uuid.v4(),
+                    name: "Always created User (Max, max@example.com, samplePW)",
+                    email: "max@example.com",
+                    password: "samplePW",
+                });
 
                 _.times(10, ()=>{
                     return User.create({

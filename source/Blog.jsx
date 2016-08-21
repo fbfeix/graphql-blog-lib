@@ -4,9 +4,14 @@ import Promise from 'promise';
 import PluginCmsFactory from './utils/plugin/PluginCmsFactory';
 import Bootloader from './Bootloader';
 import Service from './service/Service';
+import AuthTokenStorage from './auth/AuthTokenStorage';
 
+
+// building blocks
+import exportSchema from './graph/build/buildRelaySchema';
+
+let passport = require('passport');
 var graphqlHTTP = require('express-graphql');
-//var graphiql = require('express-graphiql')
 
 export default class Blog {
     constructor() {
@@ -14,6 +19,8 @@ export default class Blog {
         this.eventManager = new EventEmitter();
         this.bootloader = new Bootloader();
         this.service = new Service();
+        this.dbMap = null;
+        this.tokenStorage = new AuthTokenStorage();
     }
 
     tryRegisterPlugin(pluginFilename) {
@@ -44,26 +51,35 @@ export default class Blog {
     /**
      * starts a bunch of processes, namely and in this order:
      * - config finding and loading
-     * - database init
+     * - database init     
+     * - init passport
      * - graphql init
      * - plugin search and load
-     * - syncing database
+     * - syncing database     
      * - starting webserver
      */
     start() {
         this.bootloader.findConfig().then((config) => {            
             this.bootloader.bootDatabase(config.database).then((tablesObj) => {
                 console.log('successfully initialized database');
+                this.dbMap = tablesObj;
 
-                this.bootloader.bootGraph(tablesObj).then((schema) => {
+                this.bootloader.bootGraph(new PluginCmsFactory(this)).then((schema) => {
                     console.log('successfully initialized graph');
 
-                    
+                    /* apply schema */
+                    exportSchema(schema);
 
-                    this.service.expressApp.use('/', graphqlHTTP({
+                    this.service.expressApp.use('/', graphqlHTTP((request, response) => ({
                         schema: schema,
-                        graphiql: true
-                    }));
+                        graphiql: true,
+                        context: {
+                            request, 
+                            response,
+                            userToken: request.cookies.authToken
+                        }
+                    })));
+
                     this.service.startService();
                     
 

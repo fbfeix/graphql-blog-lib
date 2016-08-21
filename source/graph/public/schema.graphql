@@ -1,0 +1,46 @@
+schema {
+  query: Query
+  mutation: mutation
+}
+
+scalar Date
+
+type mutation {
+  login(email: String!, password: String!, permanent: Boolean): Token
+  logout(tokenValue: String!): Boolean
+  addUser(name: String!, email: String!, password: String!): User
+  changeUser(id: String!, name: String, email: String, password: String): Int
+}
+
+type Post {
+  id: String
+  title: String
+  text: String
+  tags: [Tag]
+  owner: User
+}
+
+type Query {
+  users(id: String): [User]
+  posts: [Post]
+}
+
+type Tag {
+  id: String
+  title: String
+  description: String
+}
+
+type Token {
+  value: String
+  expirationDate: Date
+}
+
+type User {
+  id: String
+  name: String
+  password: String
+  authToken: String
+  email: String
+  posts: [Post]
+}
