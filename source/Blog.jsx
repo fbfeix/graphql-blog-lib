@@ -14,13 +14,14 @@ let passport = require('passport');
 var graphqlHTTP = require('express-graphql');
 
 export default class Blog {
-    constructor() {
+    constructor(config = null) {
         this.name = "";
         this.eventManager = new EventEmitter();
         this.bootloader = new Bootloader();
         this.service = new Service();
         this.dbMap = null;
         this.tokenStorage = new AuthTokenStorage();
+        this.config = config;
     }
 
     tryRegisterPlugin(pluginFilename) {
@@ -59,7 +60,10 @@ export default class Blog {
      * - starting webserver
      */
     start() {
-        this.bootloader.findConfig().then((config) => {            
+        this.bootloader.findConfig().then((newconfig) => {          
+
+            let config = this.config || newconfig;
+
             this.bootloader.bootDatabase(config.database).then((tablesObj) => {
                 console.log('successfully initialized database');
                 this.dbMap = tablesObj;
