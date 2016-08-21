@@ -4,8 +4,9 @@ import { graphql }  from 'graphql';
 import { introspectionQuery, printSchema } from 'graphql/utilities';
 
 
-export default function exportSchema(schema) {
+export default function exportSchema(schema, folder) {
   
+  const destination = path.join(folder, '/schema.json');
 
   // Save JSON of full schema introspection for Babel Relay Plugin to use
   (async () => {
@@ -19,11 +20,12 @@ export default function exportSchema(schema) {
       );
     } else {
       fs.writeFileSync(
-        path.join(__dirname, '../public/schema.json'),
+        destination,
         JSON.stringify(result, null, 2)
       );
 
-      console.log('file written to ../public/schema.json');
+      
+      console.log(`file written to ${destination}`);
 
     }
   })();
@@ -31,7 +33,7 @@ export default function exportSchema(schema) {
 
   // Save user readable type system shorthand of schema
   fs.writeFileSync(
-    path.join(__dirname, '../public/schema.graphql'),
+    path.join(folder, '/schema.graphql'),
     printSchema(schema)
   );
 }

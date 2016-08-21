@@ -68,7 +68,7 @@ export default class Blog {
                     console.log('successfully initialized graph');
 
                     /* apply schema */
-                    exportSchema(schema);
+                    exportSchema(schema, config.graphql.targetFolder);
 
                     this.service.expressApp.use('/', graphqlHTTP((request, response) => ({
                         schema: schema,

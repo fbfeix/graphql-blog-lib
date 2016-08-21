@@ -1,5 +1,6 @@
 import Promise from 'promise';
 import fs from 'fs';
+import path from 'path';
 import { InitDatabase, User } from './database/Database'
 import InitGraphQL from './graph/Specification';
 
@@ -53,6 +54,10 @@ export default class Bootloader {
                     min: 0,
                     idle: 10000
                 }
+            },
+
+            graphql: {
+                targetFolder: path.join(__dirname, './graph/public/')
             }
         };
     }
